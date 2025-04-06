@@ -19,14 +19,30 @@ api.interceptors.request.use(
       "/categories",
       "/products/category",
       "/chat",
+      "/auth/login",
+      "/auth/register",
+      "/auth/forgot-password",
+      "/auth/reset-password",
+      "/auth/google",
+      "/auth/facebook"
     ];
-    if (publicEndpoints.some((endpoint) => config.url.includes(endpoint))) {
+
+    // Kiểm tra xem endpoint có phải là public không
+    const isPublicEndpoint = publicEndpoints.some(endpoint => 
+      config.url.includes(endpoint) && !config.url.includes('/admin')
+    );
+
+    if (isPublicEndpoint) {
       return config;
     }
 
     const token = localStorage.getItem("token");
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
+    } else {
+      // Nếu không có token và không phải endpoint public, chuyển hướng về login
+      window.location.href = "/login";
+      return Promise.reject(new Error("No token found"));
     }
     return config;
   },
@@ -65,9 +81,7 @@ export const login = async (email, password) => {
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
-      api.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${response.data.token}`;
+      api.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
     }
     return response;
   } catch (error) {
@@ -299,14 +313,20 @@ export const deleteCategory = async (categoryId) => {
   }
 };
 
-export const getAdminProducts = () => api.get("/admin/products");
+export const getAdminProducts = () => {
+  const token = localStorage.getItem("token");
+  return api.get("/admin/products", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
 
 export const updateAdminProduct = (id, productData) => {
   const token = localStorage.getItem("token");
   return api.put(`/admin/products/${id}`, productData, {
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
     },
   });
 };

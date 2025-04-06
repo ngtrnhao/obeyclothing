@@ -59,15 +59,19 @@ function structureCategories(categories) {
   const categoryMap = {};
   const rootCategories = [];
 
+  // First pass: create map and initialize children arrays
   categories.forEach((category) => {
-    category.children = [];
     categoryMap[category._id] = category;
   });
 
+  // Second pass: build the tree structure
   categories.forEach((category) => {
     if (category.parent) {
       const parent = categoryMap[category.parent._id];
       if (parent) {
+        if (!parent.children) {
+          parent.children = [];
+        }
         parent.children.push(category);
       }
     } else {

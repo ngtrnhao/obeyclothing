@@ -10,7 +10,11 @@ const categorySchema = new mongoose.Schema(
       ref: "Category",
       default: null,
     },
-    children: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
+    children: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: []
+    }],
     isComposite: { type: Boolean, default: false },
   },
   { timestamps: true }
@@ -43,13 +47,19 @@ categorySchema.methods.remove = async function (childCategory) {
 };
 
 categorySchema.methods.getChildren = async function(depth = 1) {
-  await this.populate({
+  const populateOptions = {
+    path: 'children',
+    select: 'name slug fullSlug isComposite children'
+  };
+
+  if (depth > 1) {
+    populateOptions.populate = {
       path: 'children',
-      populate: depth > 1 ? {
-          path: 'children',
-          populate: depth > 2 ? 'children' : ''
-      } : ''
-  });
+      select: 'name slug fullSlug isComposite children'
+    };
+  }
+
+  await this.populate(populateOptions);
   return this.children;
 };
 

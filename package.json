@@ -35,6 +35,7 @@
   },
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js"
+    "dev": "nodemon backend/server.js",
+    "commit": "node commit-tool.js"
   }
 }
